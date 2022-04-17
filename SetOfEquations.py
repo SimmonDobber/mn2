@@ -1,23 +1,33 @@
 import math
+import time
 
 
 class SetOfEquations:
-    def __init__(self, index, a1, a2, a3, ):
-        self.matrixSize = self.getMatrixSize(index)
+    def __init__(self, index, N, a1, a2, a3):
+        self.matrixSize = N
         self.matrix = self.getMatrix(a1, a2, a3)
         self.vector = self.getVector(index)
 
-    def _LUSolve(self):
+    def LUSolve(self):
+        startTime = time.time()
         _L, _U = self.LUDecomposition()
         y = self.forwardSubstitution(_L, self.vector)
         x = self.backwardSubstitution(_U, y)
-        return x
+        residuumNorm = self.getResiduumNorm(x)
+        elapsedTime = time.time() - startTime;
+        return x, residuumNorm, round(elapsedTime, 4)
 
     def jacobiSolve(self, errorThreshold):
+        startTime = time.time()
         x = [0 for i in range(self.matrixSize)]
         x1 = [0 for i in range(self.matrixSize)]
         residuumNorm = self.getResiduumNorm(x)
+        initialResiduumNorm = residuumNorm
+        iterations = 0
         while residuumNorm > errorThreshold:
+            if residuumNorm > 10e6 + initialResiduumNorm:
+                print("Dla danego przypadku metoda Jacobiego nie zbiega się.")
+                return
             for i in range(0, self.matrixSize):
                 s = 0
                 for j in range(0, self.matrixSize):
@@ -27,12 +37,20 @@ class SetOfEquations:
             for i in range(0, self.matrixSize):
                 x[i] = x1[i]
             residuumNorm = self.getResiduumNorm(x)
-        return x
+            iterations += 1
+        elapsedTime = time.time() - startTime
+        return x, iterations, round(elapsedTime, 4)
 
     def gaussSeidelSolve(self, errorThreshold):
+        startTime = time.time()
         x = [0 for i in range(self.matrixSize)]
         residuumNorm = self.getResiduumNorm(x)
+        initialResiduumNorm = residuumNorm
+        iterations = 0
         while residuumNorm > errorThreshold:
+            if residuumNorm > 10e6 + initialResiduumNorm:
+                print("Dla danego przypadku metoda Gaussa-Seidla nie zbiega się.")
+                return
             for i in range(0, self.matrixSize):
                 s = 0
                 for j in range(0, self.matrixSize):
@@ -40,10 +58,9 @@ class SetOfEquations:
                         s += self.matrix[i][j] * x[j]
                 x[i] = (self.vector[i] - s) / self.matrix[i][i]
             residuumNorm = self.getResiduumNorm(x)
-        return x
-
-    def getMatrixSize(self, index):
-        return 9 * int(index % 10) * int((index % 100) / 10)
+            iterations += 1
+        elapsedTime = time.time() - startTime
+        return x, iterations, round(elapsedTime, 4)
 
     def getMatrix(self, a1, a2, a3):
         matrix = [[0 for x in range(self.matrixSize)] for y in range(self.matrixSize)]
