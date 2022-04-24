@@ -5,7 +5,7 @@ index = 184574
 a1 = 5 + int((index % 1000) / 100)
 a2 = -1
 a3 = -1
-N = 9 * int(index % 10) * int((index % 100) / 10)
+N = 900 + int((index % 100) / 10) * 10 + int(index % 10)
 errorThreshold = 1e-9
 
 setOfEquations = SetOfEquations(index, N, a1, a2, a3)
